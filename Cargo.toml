@@ -14,6 +14,6 @@ edition = "2018"
 [dependencies]
 subprocess = "0.2.6"
 log = "0.4.14"
-solana-sdk = "1.6.6"
-solana-client = "1.6.7"
+solana-sdk = "1.6"
+solana-client = "1.6"
 anyhow = "1.0.40"
