@@ -3,7 +3,7 @@
 This is a set of solana test utilities to setup test validator, start and manage backend processes to test,
 and other tools to support test environment.
 
-This as a part of [P2P Validator](p2p.org) solutions.
+This as a part of [P2P Validator](https://p2p.org) solutions.
 
 ## Usage
 
@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 solana_test_helpers = "0.1.0"
-solana_sdk = "1.6.6"
+solana_sdk = "1.6"
 ```
 
 Now you can setup test validator like this:
