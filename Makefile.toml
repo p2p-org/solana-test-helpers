@@ -1,0 +1,43 @@
+[tasks.format]
+dependencies = ["install-rustfmt-toolchain"]
+install_crate = { rustup_component_name = "rustfmt", binary = "rustfmt", test_arg = "--help" }
+toolchain = "nightly-2021-04-25"
+
+[tasks.check-format]
+dependencies = ["install-rustfmt-toolchain"]
+install_crate = { rustup_component_name = "rustfmt", binary = "rustfmt", test_arg = "--help" }
+toolchain = "nightly-2021-04-25"
+
+[tasks.install-solana]
+condition = { files_not_exist = ["${HOME}/.local/share/solana/install/active_release/bin/solana"] }
+script = 'sh -c "$(curl -sSfL https://release.solana.com/v1.6.6/install)"'
+env = { PATH = "${HOME}/.local/share/solana/install/active_release/bin:${PATH}" }
+
+[tasks.install-rustfmt-toolchain]
+condition = { files_not_exist = ["${HOME}/.rustup/toolchains/nightly-2021-04-25-x86_64-unknown-linux-gnu/bin/cargo"] }
+command = "rustup"
+args = ["toolchain", "install", "nightly-2021-04-25"]
+
+[tasks.test]
+dependencies = ["install-solana"]
+
+[tasks.build]
+dependencies = ["install-solana"]
+
+
+[tasks.ci-flow]
+dependencies = [
+    "print-cargo-make-env",
+    "print-project-env",
+    "print-ci-env",
+    "print-git-env",
+    "print-rust-env",
+    "print-cargo-env",
+    "print-crate-env",
+
+    "check-format",
+    "check",
+    "clippy",
+    "build",
+    "test",
+]
