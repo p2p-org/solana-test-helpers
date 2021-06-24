@@ -24,7 +24,7 @@ impl Network {
     pub fn rpc_url(&self) -> String {
         match self {
             Self::Localhost => String::from("http://localhost:8899"),
-            Self::Devnet => String::from("https://devnet.solana.com"),
+            Self::Devnet => String::from("https://api.devnet.solana.com"),
             Self::Testnet => String::from("https://testnet.solana.com"),
             Self::MainnetBeta => String::from("https://api.mainnet-beta.solana.com"),
             Self::Other(url) => url.to_owned(),
