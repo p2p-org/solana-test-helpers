@@ -105,7 +105,7 @@ impl TestValidatorService {
         Ok(self)
     }
 
-    fn check_availability(&self) -> Result<(), std::io::Error> {
+    pub fn check_availability(&self) -> Result<(), std::io::Error> {
         std::net::TcpStream::connect_timeout(
             &SocketAddr::new([127, 0, 0, 1].into(), self.rpc_port),
             Self::SERVICE_WAIT_TIMEOUT,
