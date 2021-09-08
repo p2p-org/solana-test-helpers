@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 solana_test_helpers = "0.1.0"
-solana_sdk = "1.6"
+solana_sdk = "1.7"
 ```
 
 Now you can setup test validator like this:
