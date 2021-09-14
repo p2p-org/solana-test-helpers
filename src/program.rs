@@ -11,7 +11,7 @@ use solana_sdk::{
 use std::{fmt, fs::File, io::Read, path::PathBuf, str::FromStr};
 use subprocess::Exec;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Network {
     Localhost,
     Devnet,
