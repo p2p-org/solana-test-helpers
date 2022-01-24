@@ -11,7 +11,7 @@ use solana_sdk::{
 use std::{fmt, fs::File, io::Read, path::PathBuf, str::FromStr};
 use subprocess::Exec;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Network {
     Localhost,
     Devnet,
@@ -69,6 +69,7 @@ pub struct Program {
     path: PathBuf,
     keypair_path: PathBuf,
     payer_path: PathBuf,
+    authority_path: Option<PathBuf>,
     keypair: Keypair,
     network: Network,
 }
@@ -87,6 +88,7 @@ impl Program {
             keypair_path,
             keypair,
             network: Network::Localhost,
+            authority_path: None
         })
     }
 
@@ -95,12 +97,17 @@ impl Program {
         self
     }
 
+    pub fn with_authority(&mut self, authority: impl Into<PathBuf>) -> &mut Self {
+        self.authority_path = Some(authority.into());
+        self
+    }
+
     pub fn pubkey(&self) -> Pubkey {
         self.keypair.pubkey()
     }
 
-    pub fn deploy(&mut self) -> anyhow::Result<()> {
-        Exec::cmd("solana")
+    pub fn deploy(&mut self) -> anyhow::Result<Pubkey> {
+        let exec = Exec::cmd("solana")
             .arg("program")
             .arg("deploy")
             .arg("--url")
@@ -109,10 +116,18 @@ impl Program {
             .arg(&self.keypair_path)
             .arg("--keypair")
             .arg(&self.payer_path)
-            .arg(&self.path)
-            .join()?;
+            .arg(&self.path);
 
-        Ok(())
+        let exec = if let Some(authority) = &self.authority_path {
+            exec.arg("--upgrade-authority")
+                .arg(authority)
+        } else {
+            exec
+        };
+
+        exec.join()?;
+
+        Ok(self.pubkey())
     }
 
     pub fn deploy_if_changed(&mut self) -> anyhow::Result<()> {
