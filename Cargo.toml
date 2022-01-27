@@ -10,7 +10,7 @@ repository = "https://github.com/p2p-org/solana-test-helpers.git"
 keywords = ["solana", "test", "util"]
 categories = ["development-tools::testing"]
 license = "MIT"
-edition = "2021"
+edition = "2018"
 
 [dependencies]
 subprocess = "0.2"
