@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration, thread,
 };
+use std::io::Read;
 
 use log::{debug, info, warn};
 use subprocess::{make_pipe, Exec, Redirection, Result as PopenResult};
@@ -101,9 +102,9 @@ impl TestValidatorService {
 
         info!("Starting test validator process for {}", self.process.test_name());
 
-        let _out = self.run(&bin_path)?;
+        let run_output = self.run(&bin_path)?;
 
-        self.wait_for_availability(wait_tries)?;
+        self.wait_for_availability(wait_tries, run_output)?;
 
         debug!("Test validator service started");
         Ok(self)
@@ -117,7 +118,7 @@ impl TestValidatorService {
         .map(drop)
     }
 
-    pub fn wait_for_availability(&self, wait_tries: u32) -> Result<(), std::io::Error> {
+    pub fn wait_for_availability(&self, wait_tries: u32, mut run_output: fs::File) -> Result<(), std::io::Error> {
         let mut tries = wait_tries;
         loop {
             match self.check_availability() {
@@ -128,6 +129,16 @@ impl TestValidatorService {
                         wait_tries,
                         err
                     );
+
+                    let output_string = {
+                        let mut run_output_string = String::new();
+                        match run_output.read_to_string(&mut run_output_string) {
+                            Ok(_) => run_output_string,
+                            Err(err) => err.to_string(),
+                        }
+                    };
+                    warn!("test validator output:\n{}", output_string);
+
                     break Err(err);
                 },
                 Err(_) => {
