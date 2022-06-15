@@ -1,7 +1,7 @@
 use std::{
     fs, io,
     path::{Path, PathBuf},
-    time::Duration,
+    time::Duration, thread,
 };
 
 use log::{debug, info, warn};
@@ -88,7 +88,11 @@ impl TestValidatorService {
         TestValidatorServiceBuilder::default()
     }
 
-    pub fn start(mut self) -> PopenResult<Self> {
+    pub fn start(self) -> PopenResult<Self> {
+        self.start_with_wait_tries(Self::SERVICE_WAIT_TRIES)
+    }
+
+    pub fn start_with_wait_tries(mut self, wait_tries: u32) -> PopenResult<Self> {
         if self.check_availability().is_ok() {
             return Ok(self);
         }
@@ -99,7 +103,7 @@ impl TestValidatorService {
 
         let _out = self.run(&bin_path)?;
 
-        self.wait_for_availability()?;
+        self.wait_for_availability(wait_tries)?;
 
         debug!("Test validator service started");
         Ok(self)
@@ -113,21 +117,21 @@ impl TestValidatorService {
         .map(drop)
     }
 
-    pub fn wait_for_availability(&self) -> Result<(), std::io::Error> {
-        let mut tries = Self::SERVICE_WAIT_TRIES;
+    pub fn wait_for_availability(&self, wait_tries: u32) -> Result<(), std::io::Error> {
+        let mut tries = wait_tries;
         loop {
             match self.check_availability() {
                 Ok(_) => break Ok(()),
                 Err(err) if tries == 0 => {
                     warn!(
                         "failed to wait for test validator after {} retries: {:?}",
-                        Self::SERVICE_WAIT_TRIES,
+                        wait_tries,
                         err
                     );
                     break Err(err);
                 },
                 Err(_) => {
-                    std::thread::sleep(Duration::from_millis(500));
+                    thread::sleep(Duration::from_millis(500));
                     tries -= 1;
                 },
             }
