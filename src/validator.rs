@@ -83,7 +83,7 @@ impl TestValidatorServiceBuilder {
 
 impl TestValidatorService {
     const SERVICE_WAIT_TRIES: u32 = 50;
-    const SERVICE_WAIT_TIMEOUT: Duration = Duration::from_secs(2);
+    const SERVICE_WAIT_TIMEOUT: Duration = Duration::from_secs(5);
 
     pub fn builder() -> TestValidatorServiceBuilder {
         TestValidatorServiceBuilder::default()
