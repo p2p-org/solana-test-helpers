@@ -83,7 +83,7 @@ impl TestValidatorServiceBuilder {
 
 impl TestValidatorService {
     const SERVICE_WAIT_TRIES: u32 = 50;
-    const SERVICE_WAIT_TIMEOUT: Duration = Duration::from_secs(5);
+    const SERVICE_WAIT_TIMEOUT: Duration = Duration::from_secs(2);
 
     pub fn builder() -> TestValidatorServiceBuilder {
         TestValidatorServiceBuilder::default()
@@ -165,8 +165,8 @@ impl TestValidatorService {
             .arg("--faucet-port")
             .arg(&self.faucet_port.to_string())
             .detached()
-            .stdout(Redirection::Pipe)
-            .stderr(Redirection::File(write))
+            .stderr(Redirection::Pipe)
+            .stdout(Redirection::File(write))
             .popen()?;
 
         let pid = child.pid().expect("Failed to start test validator");
