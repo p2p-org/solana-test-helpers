@@ -12,18 +12,13 @@ jobs:
         export DEBIAN_FRONTEND=noninteractive
         sudo apt-get clean && sudo apt-get update
         sudo apt-get install -y pkg-config libudev-dev
-    - name: Install stable rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
     - name: Install nightly rust
       uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
         profile: minimal
         components: rustfmt
+        override: true
     - name: Install cargo-make
       uses: davidB/rust-cargo-make@v1
     - name: Run CI

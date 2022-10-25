@@ -88,7 +88,7 @@ impl Program {
             keypair_path,
             keypair,
             network: Network::Localhost,
-            authority_path: None
+            authority_path: None,
         })
     }
 
@@ -119,8 +119,7 @@ impl Program {
             .arg(&self.path);
 
         let exec = if let Some(authority) = &self.authority_path {
-            exec.arg("--upgrade-authority")
-                .arg(authority)
+            exec.arg("--upgrade-authority").arg(authority)
         } else {
             exec
         };
