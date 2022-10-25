@@ -35,6 +35,7 @@ pub struct TestValidatorService {
     rpc_port: u16,
     faucet_port: u16,
     bpf_programs: Vec<BpfProgram>,
+    reset: bool,
 }
 
 #[derive(Clone)]
@@ -44,6 +45,7 @@ pub struct TestValidatorServiceBuilder {
     faucet_port: u16,
     ledger_path: Option<PathBuf>,
     bpf_programs: Vec<BpfProgram>,
+    reset: bool,
 }
 
 impl Default for TestValidatorServiceBuilder {
@@ -60,6 +62,7 @@ impl TestValidatorServiceBuilder {
             faucet_port: 9900,
             ledger_path: None,
             bpf_programs: vec![],
+            reset: false,
         }
     }
 
@@ -75,6 +78,11 @@ impl TestValidatorServiceBuilder {
 
     pub fn rpc_port(mut self, port: u16) -> Self {
         self.rpc_port = port;
+        self
+    }
+
+    pub fn reset(mut self) -> Self {
+        self.reset = true;
         self
     }
 
@@ -97,6 +105,7 @@ impl TestValidatorServiceBuilder {
             rpc_port: self.rpc_port,
             faucet_port: self.faucet_port,
             bpf_programs: self.bpf_programs,
+            reset: self.reset,
         }
     }
 }
@@ -189,6 +198,10 @@ impl TestValidatorService {
                 .arg("--bpf-program")
                 .arg(&program.program_id.to_string())
                 .arg(&program.program_so_path);
+        }
+
+        if self.reset {
+            command = command.arg("--reset");
         }
 
         let child = command
