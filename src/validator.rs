@@ -1,14 +1,16 @@
 use std::{
     fs, io,
+    io::Read,
     path::{Path, PathBuf},
-    time::Duration, thread,
+    thread,
+    time::Duration,
 };
-use std::io::Read;
 
 use log::{debug, info, warn};
 use subprocess::{make_pipe, Exec, Redirection, Result as PopenResult};
 
 use super::service::TestServiceProcess;
+use solana_sdk::pubkey::Pubkey;
 use std::net::SocketAddr;
 
 fn clean_test_ledger_dir(test_name: &str) -> io::Result<PathBuf> {
@@ -20,12 +22,19 @@ fn clean_test_ledger_dir(test_name: &str) -> io::Result<PathBuf> {
     Ok(dir)
 }
 
+#[derive(Debug, Clone)]
+struct BpfProgram {
+    program_id: Pubkey,
+    program_so_path: PathBuf,
+}
+
 #[derive(Debug)]
 pub struct TestValidatorService {
     process: TestServiceProcess,
     ledger_path: PathBuf,
     rpc_port: u16,
     faucet_port: u16,
+    bpf_programs: Vec<BpfProgram>,
 }
 
 #[derive(Clone)]
@@ -34,6 +43,7 @@ pub struct TestValidatorServiceBuilder {
     rpc_port: u16,
     faucet_port: u16,
     ledger_path: Option<PathBuf>,
+    bpf_programs: Vec<BpfProgram>,
 }
 
 impl Default for TestValidatorServiceBuilder {
@@ -49,6 +59,7 @@ impl TestValidatorServiceBuilder {
             rpc_port: 8899,
             faucet_port: 9900,
             ledger_path: None,
+            bpf_programs: vec![],
         }
     }
 
@@ -67,6 +78,14 @@ impl TestValidatorServiceBuilder {
         self
     }
 
+    pub fn add_program(mut self, program_id: Pubkey, program_so_path: impl Into<PathBuf>) -> Self {
+        self.bpf_programs.push(BpfProgram {
+            program_id,
+            program_so_path: program_so_path.into(),
+        });
+        self
+    }
+
     pub fn build(mut self) -> TestValidatorService {
         let ledger_path = self
             .ledger_path
@@ -77,6 +96,7 @@ impl TestValidatorServiceBuilder {
             ledger_path,
             rpc_port: self.rpc_port,
             faucet_port: self.faucet_port,
+            bpf_programs: self.bpf_programs,
         }
     }
 }
@@ -126,8 +146,7 @@ impl TestValidatorService {
                 Err(err) if tries == 0 => {
                     warn!(
                         "failed to wait for test validator after {} retries: {:?}",
-                        wait_tries,
-                        err
+                        wait_tries, err
                     );
 
                     let output_string = {
@@ -157,19 +176,28 @@ impl TestValidatorService {
         debug!("Starting process {:?}", bin_path);
 
         let (read, write) = make_pipe()?;
-        let child = Exec::cmd(bin_path)
+        let mut command = Exec::cmd(bin_path)
             .arg("--ledger")
             .arg(&self.ledger_path)
             .arg("--rpc-port")
             .arg(&self.rpc_port.to_string())
             .arg("--faucet-port")
-            .arg(&self.faucet_port.to_string())
+            .arg(&self.faucet_port.to_string());
+
+        for program in &self.bpf_programs {
+            command = command
+                .arg("--bpf-program")
+                .arg(&program.program_id.to_string())
+                .arg(&program.program_so_path);
+        }
+
+        let child = command
             .detached()
             .stderr(Redirection::Pipe)
             .stdout(Redirection::File(write))
             .popen()?;
-
         let pid = child.pid().expect("Failed to start test validator");
+
         debug!(
             "Started test validator process PID {:?} for test {}",
             pid,
